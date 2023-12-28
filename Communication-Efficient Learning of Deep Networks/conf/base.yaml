@@ -1,0 +1,4 @@
+num_clients: 200 # Numbers of clients
+num_clients_per_round_fit: 8 # Le nombre de client qu'on met a jour par itération
+config_fit: # Configuration of fit itteration
+  local_epochs: 1 # Number of local epoch
