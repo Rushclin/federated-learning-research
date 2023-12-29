@@ -1,0 +1,3 @@
+config_fit: 
+  lr: 0.01 # Learning rate 
+  momentum: 0.9 # Momentum of applications 
