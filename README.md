@@ -14,7 +14,7 @@ Avec la prise de conscience croissante sur la confidentialité, les dévéloppeu
 C’est donc là qu’intevient le Federated Learning 
 
 
-## Etape du FEderated Learning (FL)
+## Etape du Federated Learning (FL)
 
 1. Nous créons notre modèle qui est hébergé sur un serveur centralisé, chaque appareil télécharge le modèle (une copie locale) où ce dernier pourra s’exécuter.
 2. Le modèle apprend et s’entraine sur les données locale de l’utilisateur,
