@@ -1,14 +1,19 @@
-from tqdm import tqdm
 import numpy as np
 import torch
+import hydra
+import warnings
+
+from omegaconf import DictConfig, OmegaConf
+from tqdm import tqdm
 from torch import optim
+
 from model import Model
 from clients import ClientsGroup
 
-import hydra
-from omegaconf import DictConfig, OmegaConf
-
 DEVICE = 'gpu' if torch.cuda.is_available() else 'cpu'
+
+# Ignorer tous les avertissements (notamment les UserWarnings)
+warnings.filterwarnings("ignore")
 
 @hydra.main(config_name="base", config_path="conf", version_base=None)
 def main(cfg: DictConfig):
