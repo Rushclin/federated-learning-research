@@ -1,3 +1,16 @@
+# num_of_clients: 100 # Nombre de client
+# learning_rate: 0.01 # Learning rate (Taux d'apprentissage). Lorsqu'on doit faire notre descente de gradient, determine la taille du *pas*
+# batchsize: 10 # Le nombre de client qu'on sélectione au hasard pour effectuer la descente de gradient
+# iid: 1 # On alloue les donnees de maniere non IID (Non Independant et Identiquement Distribué)
+# epoch: 5 # L'epoque. Ici je ne fait que reproduire ce que propose l'article
+# val_freq: 5 # On valide le code tous les 20 rounds (tours) | Frequence avec laquelle on doit valider le modele. Apres le nombre de tour de communication
+# num_comm: 1000 # On doit arreter la formation apres avoir effectuer 1000 tours ou rounds
+# save_freq: 20 # Frequence avec laquelle on doit sauvegarder le modele 
+# cfraction: 0.1
+
+
+# Juste pour accelerer le test 
+
 num_of_clients: 100 # Nombre de client
 learning_rate: 0.01 # Learning rate (Taux d'apprentissage). Lorsqu'on doit faire notre descente de gradient, determine la taille du *pas*
 batchsize: 10 # Le nombre de client qu'on sélectione au hasard pour effectuer la descente de gradient
@@ -7,4 +20,3 @@ val_freq: 5 # On valide le code tous les 20 rounds (tours) | Frequence avec laqu
 num_comm: 1000 # On doit arreter la formation apres avoir effectuer 1000 tours ou rounds
 save_freq: 20 # Frequence avec laquelle on doit sauvegarder le modele 
 cfraction: 0.1
-
