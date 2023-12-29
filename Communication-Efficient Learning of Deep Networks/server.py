@@ -2,7 +2,7 @@ from tqdm import tqdm
 import numpy as np
 import torch
 from torch import optim
-from model import Mnist_CNN
+from model import Model
 from clients import ClientsGroup
 
 import hydra
@@ -26,7 +26,7 @@ def main(cfg: DictConfig):
     val_freq = config['val_freq']  # Frequence de validation
     batchsize = config['batchsize']
 
-    net = Mnist_CNN()
+    net = Model()
 
     net = net.to(DEVICE)
 
@@ -81,15 +81,5 @@ def main(cfg: DictConfig):
                     num += 1
                 print('Taux d\'apprentissage: {}'.format(sum_accu / num))
 
-        # if (i + 1) % args['save_freq'] == 0:
-        #     torch.save(net, os.path.join(args['save_path'],
-        #                                  '{}_num_comm{}_E{}_B{}_lr{}_num_clients{}_cf{}'.format(args['model_name'],
-        #                                                                                         i, args['epoch'],
-        #                                                                                         args['batchsize'],
-        #                                                                                         args['learning_rate'],
-        #                                                                                         args['num_of_clients'],
-        #                                                                                         args['cfraction'])))
-
-
 if __name__ == "__main__":
-    main()
+    main() # Démarrage de la fonction
