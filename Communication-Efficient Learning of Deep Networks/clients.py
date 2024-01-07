@@ -40,7 +40,7 @@ class Client(object):
                 - global_parameters : Dictionnaire contenant les paramètres globaux du modèle. Ces paramètres sont chargés dans le modèle local avant la mise à jour. Cela permet au modèle local de commencer la mise à jour à partir d'une version récente du modèle global.
         """
 
-        loss_fn = F.cross_entropy
+        loss_fn = F.cross_entropy # Utilise juste pour les images
 
         # Chargement des parametres dans le modele
         net.load_state_dict(global_parameters, strict=True)
@@ -97,9 +97,8 @@ class ClientsGroup(object):
         for i in range(self.num_of_clients):
             shards_id1 = shards_id[i * 2]
             shards_id2 = shards_id[i * 2 + 1]
-            data_shards1 = train_data[shards_id1 *
-                                      shard_size: shards_id1 * shard_size + shard_size]
-            data_shards2 = train_data[shards_id2 *
+            data_shards1 = train_data[shards_id1 * shard_size: shards_id1 * shard_size + shard_size]
+            data_shards2 = train_data[shards_id2 * 
                                       shard_size: shards_id2 * shard_size + shard_size]
             label_shards1 = train_label[shards_id1 *
                                         shard_size: shards_id1 * shard_size + shard_size]

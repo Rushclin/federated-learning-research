@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as F # Renommer le nom F
 
 
 class Model(nn.Module):
@@ -19,7 +19,7 @@ class Model(nn.Module):
         """
             Ici, on définie comment la méthode sera propagée
         """
-        x = inputs.view(-1, 1, 28, 28)
+        x = inputs.view(-1, 1, 28, 28) # regqrder pourquoi on a applique une view ici
         x = F.relu(self.conv1(x))
         x = self.pool1(x)
         x = F.relu(self.conv2(x))

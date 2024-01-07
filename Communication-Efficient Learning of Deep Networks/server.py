@@ -15,6 +15,7 @@ DEVICE = 'gpu' if torch.cuda.is_available() else 'cpu'
 # Ignorer tous les avertissements (notamment les UserWarnings)
 warnings.filterwarnings("ignore")
 
+
 @hydra.main(config_name="base", config_path="conf", version_base=None)
 def main(cfg: DictConfig):
 
@@ -82,9 +83,10 @@ def main(cfg: DictConfig):
                     data, label = data.to(DEVICE), label.to(DEVICE)
                     preds = net(data)
                     preds = torch.argmax(preds, dim=1)
-                    sum_accu += (preds == label).float().mean()
+                    sum_accu += (preds == label).float().mean() # chercher a comprendre pourquoi on a utilise la moyenne. 
                     num += 1
                 print('Taux d\'apprentissage: {}'.format(sum_accu / num))
 
+
 if __name__ == "__main__":
-    main() # Démarrage de la fonction
+    main()  # Démarrage de la fonction

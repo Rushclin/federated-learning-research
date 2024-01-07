@@ -6,4 +6,4 @@ epoch: 5 # L'epoque. Ici je ne fait que reproduire ce que propose l'article
 val_freq: 5 # On valide le code tous les 20 rounds (tours) | Frequence avec laquelle on doit valider le modele. Apres le nombre de tour de communication
 num_comm: 1000 # On doit arreter la formation apres avoir effectuer 1000 tours ou rounds
 save_freq: 20 # Frequence avec laquelle on doit sauvegarder le modele 
-cfraction: 0.1
+cfraction: 0.1 # 
