@@ -1,9 +1,21 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F # Renommer le nom F
+import torch.nn.functional as F 
+
+class Model_2NN(nn.Module):  # MNIST 2NN Dans l'article
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(in_features=784, out_features=200) # On a des images 28 * 28
+        self.fc2 = nn.Linear(in_features=200, out_features=200)
+        self.fc3 = nn.Linear(in_features=200, out_features=10)
+
+    def forward(self, inputs): 
+        x = F.relu(self.fc1(inputs))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 
-class Model(nn.Module):
+class Model_CNN(nn.Module): # MNIST CNN Dans l'article
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(
@@ -19,7 +31,7 @@ class Model(nn.Module):
         """
             Ici, on définie comment la méthode sera propagée
         """
-        x = inputs.view(-1, 1, 28, 28) # regqrder pourquoi on a applique une view ici
+        x = inputs.view(-1, 1, 28, 28) 
         x = F.relu(self.conv1(x))
         x = self.pool1(x)
         x = F.relu(self.conv2(x))

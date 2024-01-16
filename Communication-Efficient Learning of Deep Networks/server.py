@@ -7,7 +7,7 @@ from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from torch import optim
 
-from model import Model
+from model import Model_2NN, Model_CNN
 from clients import ClientsGroup
 
 DEVICE = 'gpu' if torch.cuda.is_available() else 'cpu'
@@ -31,17 +31,22 @@ def main(cfg: DictConfig):
     num_comm = config['num_comm']  # Le nombre de tour de formation
     val_freq = config['val_freq']  # Frequence de validation
     batchsize = config['batchsize']
+    model = config['model']
+    cfraction = config['cfraction']
 
-    net = Model()
+    net = None
 
-    net = net.to(DEVICE)
+    if model == "Model_2NN":
+        net = Model_2NN()
+    else: 
+        net = Model_CNN()
+
+    net = net.to(DEVICE) # On indique sur quel device on doit executer l'algorithme. CPU ou GPU
 
     opti = optim.SGD(net.parameters(), lr=learning_rate)
 
-    myClients = ClientsGroup(num_of_clients, DEVICE)
-    testDataLoader = myClients.test_data_loader
-
-    num_in_comm = int(max(num_of_clients * 1, 1))
+    my_clients = ClientsGroup(num_of_clients, DEVICE)
+    test_data_loader = my_clients.test_data_loader
 
     global_parameters = {}
     for key, var in net.state_dict().items():
@@ -50,15 +55,15 @@ def main(cfg: DictConfig):
     for i in range(num_comm):
         print("Tour de communication {}".format(i+1))
 
+        num_in_comm = int(max(num_of_clients * cfraction, 1))
         order = np.random.permutation(num_of_clients)
         clients_in_comm = ['client{}'.format(i) for i in order[0:num_in_comm]]
 
         sum_parameters = None
         for client in tqdm(clients_in_comm):
-            local_parameters = myClients.clients_set[client].local_update(
+            local_parameters = my_clients.clients_set[client].local_update(
                 local_epoch=epoch,
                 local_batch_size=batchsize,
-
                 net=net,
                 optimizer=opti,
                 global_parameters=global_parameters)
@@ -79,7 +84,7 @@ def main(cfg: DictConfig):
                 net.load_state_dict(global_parameters, strict=True)
                 sum_accu = 0
                 num = 0
-                for data, label in testDataLoader:
+                for data, label in test_data_loader:
                     data, label = data.to(DEVICE), label.to(DEVICE)
                     preds = net(data)
                     preds = torch.argmax(preds, dim=1)
