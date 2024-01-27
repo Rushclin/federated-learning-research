@@ -3,6 +3,9 @@ import torch
 import hydra
 import warnings
 
+import threading
+import queue
+
 from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from torch import optim
@@ -11,6 +14,24 @@ from model import Model_2NN, Model_CNN
 from clients import ClientsGroup
 
 DEVICE = 'gpu' if torch.cuda.is_available() else 'cpu'
+
+list_parameters = queue()
+
+def start_client(client, epoch, batchsize, net, opti, global_parameters):
+    
+    global list_parameters
+
+    state = client.local_update(
+        local_epoch=epoch,
+        local_batch_size=batchsize,
+        net=net,
+        optimizer=opti,
+        global_parameters=global_parameters)
+    
+    list_parameters.append({"id_client": client, "params": state})
+
+
+# Utiliser les threads pour mettre les clients en parallèle.
 
 # Ignorer tous les avertissements (notamment les UserWarnings)
 warnings.filterwarnings("ignore")
@@ -38,10 +59,11 @@ def main(cfg: DictConfig):
 
     if model == "Model_2NN":
         net = Model_2NN()
-    else: 
+    else:
         net = Model_CNN()
 
-    net = net.to(DEVICE) # On indique sur quel device on doit executer l'algorithme. CPU ou GPU
+    # On indique sur quel device on doit executer l'algorithme. CPU ou GPU
+    net = net.to(DEVICE)
 
     opti = optim.SGD(net.parameters(), lr=learning_rate)
 
@@ -61,23 +83,32 @@ def main(cfg: DictConfig):
 
         sum_parameters = None
         for client in tqdm(clients_in_comm):
-            local_parameters = my_clients.clients_set[client].local_update(
-                local_epoch=epoch,
-                local_batch_size=batchsize,
-                net=net,
-                optimizer=opti,
-                global_parameters=global_parameters)
-            if sum_parameters is None:
-                sum_parameters = {}
-                for key, var in local_parameters.items():
-                    sum_parameters[key] = var.clone()
-            else:
-                for var in sum_parameters:
-                    sum_parameters[var] = sum_parameters[var] + \
-                        local_parameters[var]
+            # local_parameters = my_clients.clients_set[client].local_update(
+            #     local_epoch=epoch,
+            #     local_batch_size=batchsize,
+            #     net=net,
+            #     optimizer=opti,
+            #     global_parameters=global_parameters)
+            
+            t = threading.Thread(target=start_client, args=(my_clients.clients_set[client], epoch, batchsize, net, opti, global_parameters))
+            t.start()
+            # start_client()
+
+            if len(list_parameters) >= clients_in_comm: 
+                for element in list_parameters: 
+                    sum_parameters += element.get("params")               
+
+            # if sum_parameters is None:
+            #     sum_parameters = {}
+            #     for key, var in local_parameters.items():
+            #         sum_parameters[key] = var.clone()
+            # else:
+            #     for var in sum_parameters:
+            #         sum_parameters[var] = sum_parameters[var] + \
+            #             local_parameters[var]
 
         for var in global_parameters:
-            global_parameters[var] = (sum_parameters[var] / num_in_comm)
+            global_parameters[var] = (sum_parameters[var] / num_in_comm) # Modifier aussi ici puisque la structure a change
 
         with torch.no_grad():
             if (i + 1) % val_freq == 0:
@@ -88,7 +119,8 @@ def main(cfg: DictConfig):
                     data, label = data.to(DEVICE), label.to(DEVICE)
                     preds = net(data)
                     preds = torch.argmax(preds, dim=1)
-                    sum_accu += (preds == label).float().mean() # chercher a comprendre pourquoi on a utilise la moyenne. 
+                    # chercher a comprendre pourquoi on a utilise la moyenne.
+                    sum_accu += (preds == label).float().mean()
                     num += 1
                 print('Taux d\'apprentissage: {}'.format(sum_accu / num))
 
