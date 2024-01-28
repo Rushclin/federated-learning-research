@@ -10,8 +10,11 @@ class ResNet50(nn.Module):
         super(ResNet50, self).__init__()
         self.resnet50 = models.resnet50(pretrained=True)
         self.resnet50.fc = nn.Linear(self.resnet50.fc.in_features, num_classes)
+        print("in_features", self.resnet50.fc.in_features)
 
     def forward(self, x):
+        for parameters in self.resnet50.parameters():
+            parameters.requires_grad = False
         return self.resnet50(x)
 
 
@@ -22,9 +25,10 @@ class DenseNet121(nn.Module):
         self.densenet121 = models.densenet121(pretrained=True)
 
         self.densenet121.classifier = nn.Linear(
-            in_features=self.densenet121.classifier.in_features, num_classes=num_classes)
+            in_features=self.densenet121.classifier.in_features, out_features=num_classes)
 
     def forward(self, x):
+        x = x.unsqueeze(1) # On ajoute une dimension, car le modele fonction en 3D ou en 4D
         return self.densenet121(x)
 
 
@@ -89,7 +93,7 @@ if __name__ == "__main__":
     """
     Juste pour tester
     """
-    num_classes = 10
+    num_classes = 100
     rest = ResNet50(num_classes)
 
     print(rest)
