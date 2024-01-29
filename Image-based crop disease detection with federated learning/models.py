@@ -5,17 +5,30 @@ import timm
 
 # ResNet50
 
-class ResNet50(nn.Module):
-    def __init__(self, num_classes):
-        super(ResNet50, self).__init__()
-        self.resnet50 = models.resnet50(pretrained=True)
-        self.resnet50.fc = nn.Linear(self.resnet50.fc.in_features, num_classes)
-        print("in_features", self.resnet50.fc.in_features)
+# class ResNet50(nn.Module):
+#     def __init__(self, num_classes):
+#         super(ResNet50, self).__init__()
+#         self.resnet50 = models.resnet50(pretrained=True)
+#         self.resnet50.fc = nn.Sequential(
+#                nn.Linear(2048, 128),
+#                nn.ReLU(inplace=True),
+#                nn.Linear(128, num_classes))
 
-    def forward(self, x):
-        for parameters in self.resnet50.parameters():
-            parameters.requires_grad = False
-        return self.resnet50(x)
+#     def forward(self, x):
+#         return self.resnet50(x)
+
+def ResNet50(num_classes: int): 
+    model = models.resnet50(pretrained=True)
+    
+    for param in model.parameters():
+        param.requires_grad = False   
+        
+    model.fc = nn.Sequential(
+                nn.Linear(2048, 128),
+                nn.ReLU(inplace=True),
+                nn.Linear(128, num_classes))
+    
+    return model
 
 
 # DenseNet121

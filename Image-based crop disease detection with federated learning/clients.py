@@ -28,13 +28,12 @@ class Client:
 
         self.train_dataloader = DataLoader(
             self.train_dataset, batch_size, shuffle=True)
-        
+                
         for epoch in range(num_epochs):
-            model.train()
             for i, inp in enumerate(self.train_dataloader):
                 data, label = inp
                 data, label = data.to(device), label.to(device)
-                pred = model(data)
+                pred = model(data).to(device)
                 loss = loss_fn(pred, label)
                 loss.backward()
                 optimizer.step()
@@ -66,19 +65,23 @@ class ClientGroup:
         dataset = GetDataSet(path=self.path)
 
         self.test_data_loader = DataLoader(
-            dataset.test_data, batch_size=self.batch_size, shuffle=False)
+            dataset.image_datasets['validation'], batch_size=self.batch_size, shuffle=False)
 
-        train_data = dataset.train_data
+        
+        train_data = dataset.image_datasets['train'] # TODO: Do more...
 
-        train_label_np = np.array(dataset.train_label)
+
+        train_label = [label for _, label in train_data]
+
+        train_label_np = np.array(train_label)
         train_data_extract = []
 
         for data, _ in enumerate(train_data):
             train_data_extract.append(data)
 
-        shard_size = dataset.train_data_size // self.num_of_clients // 2
+        shard_size = len(train_data) // self.num_of_clients // 2
         shards_id = np.random.permutation(
-            dataset.train_data_size // shard_size)
+            len(train_data) // shard_size)
 
         for i in range(self.num_of_clients):
             shards_id1 = shards_id[i * 2]
