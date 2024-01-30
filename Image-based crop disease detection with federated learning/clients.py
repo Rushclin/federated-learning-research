@@ -1,9 +1,4 @@
-import torch
-
-import numpy as np
-
-from torch.utils.data import DataLoader
-from torch.utils.data import TensorDataset, TensorDataset
+from torch.utils.data import DataLoader, Subset
 
 import torch.nn.functional as F
 
@@ -28,14 +23,20 @@ class Client:
 
         self.train_dataloader = DataLoader(
             self.train_dataset, batch_size, shuffle=True)
-                
+
         for epoch in range(num_epochs):
-            for i, inp in enumerate(self.train_dataloader):
-                data, label = inp
+
+            model.train()
+
+            for data, label in self.train_dataloader:
+
                 data, label = data.to(device), label.to(device)
-                pred = model(data).to(device)
+
+                pred = model(data)
+
                 loss = loss_fn(pred, label)
                 loss.backward()
+
                 optimizer.step()
                 optimizer.zero_grad()
 
@@ -58,54 +59,24 @@ class ClientGroup:
         self.balance_dataset()
 
     def balance_dataset(self):
-        """
-            Répartition des données pour les différents clients 
-        """
 
         dataset = GetDataSet(path=self.path)
 
-        self.test_data_loader = DataLoader(
-            dataset.image_datasets['validation'], batch_size=self.batch_size, shuffle=False)
+        train_data = dataset.image_datasets['train']
 
-        
-        train_data = dataset.image_datasets['train'] # TODO: Do more...
+        subset_size = len(train_data) // self.num_of_clients
 
-
-        train_label = [label for _, label in train_data]
-
-        train_label_np = np.array(train_label)
-        train_data_extract = []
-
-        for data, _ in enumerate(train_data):
-            train_data_extract.append(data)
-
-        shard_size = len(train_data) // self.num_of_clients // 2
-        shards_id = np.random.permutation(
-            len(train_data) // shard_size)
+        self.test_data_loader = DataLoader(dataset=dataset.image_datasets['validation'], batch_size=self.batch_size, shuffle=False)
 
         for i in range(self.num_of_clients):
-            shards_id1 = shards_id[i * 2]
-            shards_id2 = shards_id[i * 2 + 1]
+            start_idx = i * subset_size
+            end_idx = (i + 1) * subset_size
 
-            data_shards1 = train_data_extract[shards_id1 *
-                                              shard_size: shards_id1 * shard_size + shard_size]
-            data_shards2 = train_data_extract[shards_id2 *
-                                              shard_size: shards_id2 * shard_size + shard_size]
+            subset = Subset(train_data, range(start_idx, end_idx))
 
-            label_shards1 = train_label_np[shards_id1 *
-                                           shard_size: shards_id1 * shard_size + shard_size]
-            label_shards2 = train_label_np[shards_id2 *
-                                           shard_size: shards_id2 * shard_size + shard_size]
+            someone = Client(i, subset, self.device)
 
-            local_data = torch.tensor(np.vstack((data_shards1, data_shards2)))
-            local_label = torch.tensor(
-                np.vstack((label_shards1, label_shards2)))
-            local_label = torch.argmax(local_label, axis=1)
-
-            local_dataset = TensorDataset(local_data, local_label)
-            someone = Client(i, local_dataset, self.device)
-
-            self.clients_set['client{}'.format(i)] = someone
+            self.clients_set[f'client{i}'] = someone
 
 
 if __name__ == "__main__":

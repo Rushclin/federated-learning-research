@@ -5,44 +5,41 @@ import timm
 
 # ResNet50
 
-# class ResNet50(nn.Module):
-#     def __init__(self, num_classes):
-#         super(ResNet50, self).__init__()
-#         self.resnet50 = models.resnet50(pretrained=True)
-#         self.resnet50.fc = nn.Sequential(
-#                nn.Linear(2048, 128),
-#                nn.ReLU(inplace=True),
-#                nn.Linear(128, num_classes))
+class ResNet50(nn.Module):
+    def __init__(self, num_classes=5, pretrained=True, device='cuda'):
+        super(ResNet50, self).__init__()
 
-#     def forward(self, x):
-#         return self.resnet50(x)
+        self.model = models.resnet50(pretrained=pretrained).to(device)
 
-def ResNet50(num_classes: int): 
-    model = models.resnet50(pretrained=True)
-    
-    for param in model.parameters():
-        param.requires_grad = False   
-        
-    model.fc = nn.Sequential(
-                nn.Linear(2048, 128),
-                nn.ReLU(inplace=True),
-                nn.Linear(128, num_classes))
-    
-    return model
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # Ici, on remplace la derniere couche (on la customise) pour avoir en sortie le nombre de classe souhaite
+        self.model.fc = nn.Sequential(
+            nn.Linear(2048, 128),
+            nn.ReLU(inplace=True),
+            nn.Linear(128, num_classes)
+        ).to(device)
+
+    def forward(self, x):
+        return self.model(x)
 
 
 # DenseNet121
 class DenseNet121(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes=5, pretrained=True, device='cuda'):
         super(DenseNet121, self).__init__()
-        self.densenet121 = models.densenet121(pretrained=True)
 
-        self.densenet121.classifier = nn.Linear(
-            in_features=self.densenet121.classifier.in_features, out_features=num_classes)
+        self.model = models.densenet121(pretrained)
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.classifier = nn.Linear(
+            in_features=self.densenet121.classifier.in_features, out_features=num_classes).to(device)
 
     def forward(self, x):
-        x = x.unsqueeze(1) # On ajoute une dimension, car le modele fonction en 3D ou en 4D
-        return self.densenet121(x)
+        return self.model(x)
 
 
 # InceptionV3
