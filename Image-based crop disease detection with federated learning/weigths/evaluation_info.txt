@@ -1,0 +1,142 @@
+Communication Round: 2
+Number of Epochs: 1
+Accuracy: 0.13800837320574164
+Precision: 0.06774575442069951
+Recall: 0.044719896331738444
+F1-Score: 0.047679048843958335
+client: client2
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 4
+Number of Epochs: 1
+Accuracy: 0.11154306220095694
+Precision: 0.07734884732492389
+Recall: 0.033024442496316565
+F1-Score: 0.041319048310404505
+client: client2
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 6
+Number of Epochs: 1
+Accuracy: 0.11666866028708134
+Precision: 0.07386571957678431
+Recall: 0.031227509424228687
+F1-Score: 0.03739895310473349
+client: client2
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 8
+Number of Epochs: 1
+Accuracy: 0.058761961722488036
+Precision: 0.05511600972127287
+Recall: 0.011657236152575327
+F1-Score: 0.017243652913993122
+client: client1
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 2
+Number of Epochs: 1
+Accuracy: 267.75
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 4
+Number of Epochs: 1
+Accuracy: 265.25
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 2
+Number of Epochs: 1
+Accuracy: 0.1941964328289032
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 4
+Number of Epochs: 1
+Accuracy: 0.5982142686843872
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 6
+Number of Epochs: 1
+Accuracy: 0.1925223171710968
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 8
+Number of Epochs: 1
+Accuracy: 0.5993303656578064
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 10
+Number of Epochs: 1
+Accuracy: 0.1947544664144516
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 12
+Number of Epochs: 1
+Accuracy: 0.5848214030265808
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 14
+Number of Epochs: 1
+Accuracy: 0.5982142686843872
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 16
+Number of Epochs: 1
+Accuracy: 0.5998883843421936
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 18
+Number of Epochs: 1
+Accuracy: 0.5904017686843872
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 20
+Number of Epochs: 1
+Accuracy: 0.5987723469734192
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 22
+Number of Epochs: 1
+Accuracy: 0.1646205335855484
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 24
+Number of Epochs: 1
+Accuracy: 0.5881696343421936
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 26
+Number of Epochs: 1
+Accuracy: 0.5792410969734192
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 28
+Number of Epochs: 1
+Accuracy: 0.1707589328289032
+learning_rate: 0.01
+cfraction: 0.1
+
+Communication Round: 30
+Number of Epochs: 1
+Accuracy: 0.6004464030265808
+learning_rate: 0.01
+cfraction: 0.1
+

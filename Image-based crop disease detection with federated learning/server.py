@@ -102,48 +102,56 @@ def main(cfg: DictConfig):
                 sum_f1 = 0
                 num = 0
 
+                running_corrects = 0
+
+
                 for data, label in test_data_loader:
                     data, label = data.to(DEVICE), label.to(DEVICE)
                     preds = model(data)
                     preds = torch.argmax(preds, dim=1)
 
+                    running_corrects += torch.sum(preds == label.data)
+                    sum_accu += (preds == label).float().mean()
+
                     # Accuracy
-                    accu = accuracy_score(label, preds)
-                    sum_accu += accu
+                    # accu = accuracy_score(label, preds)
+                    # sum_accu += accu
 
-                    # Calcul de la précision, du rappel et du F1-score
-                    precision = precision_score(label, preds, average='macro')
-                    recall = recall_score(label, preds, average='macro')
-                    f1 = f1_score(label, preds, average='macro')
+                    # # Calcul de la précision, du rappel et du F1-score
+                    # precision = precision_score(label.data, preds, average='macro')
+                    # recall = recall_score(label.data, preds, average='macro')
+                    # f1 = f1_score(label.data, preds, average='macro')
 
-                    sum_precision += precision
-                    sum_recall += recall
-                    sum_f1 += f1
+                    # sum_precision += precision
+                    # sum_recall += recall
+                    # sum_f1 += f1
 
                     num += 1
 
                 avg_accuracy = sum_accu / num
-                avg_precision = sum_precision / num
-                avg_recall = sum_recall / num
-                avg_f1 = sum_f1 / num
+                # avg_precision = sum_precision / num
+                # avg_recall = sum_recall / num
+                # avg_f1 = sum_f1 / num
+                    
+                acc = running_corrects.float() / dataset.classes_size
 
                 print('Accuracy - Taux d\'apprentissage : {}'.format(avg_accuracy))
-                print('Precision - Précision : {}'.format(avg_precision))
-                print('Recall - Rappel : {}'.format(avg_recall))
-                print('F1-Score - Score F1 : {}'.format(avg_f1))
+                # print('Precision - Précision : {}'.format(avg_precision))
+                # print('Recall - Rappel : {}'.format(avg_recall))
+                # print('F1-Score - Score F1 : {}'.format(avg_f1))
 
                 # Ecriture dans un fichier txt de toutes les metriques
 
                 with open(os.path.join(path, "evaluation_info.txt"), "a") as f:
                     f.write(f"Communication Round: {i+1}\n")
                     f.write(f"Number of Epochs: {epoch}\n")
-                    f.write(f"Accuracy: {avg_accuracy.item()}\n")
-                    f.write(f"Precision: {avg_precision}\n")
-                    f.write(f"Recall: {avg_recall}\n")
-                    f.write(f"F1-Score: {avg_f1}\n")
-                    f.write(f"client: {client}\n")
+                    f.write(f"Accuracy: {avg_accuracy}\n")
+                    # f.write(f"Precision: {avg_precision}\n")
+                    # f.write(f"Recall: {avg_recall}\n")
+                    # f.write(f"F1-Score: {avg_f1}\n")
                     f.write(f"learning_rate: {learning_rate}\n")
                     f.write(f"cfraction: {cfraction}\n")
+                    f.write("\n")
 
         
 
