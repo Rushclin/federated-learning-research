@@ -15,7 +15,7 @@ from clients import ClientsGroup
 
 DEVICE = 'gpu' if torch.cuda.is_available() else 'cpu'
 
-list_parameters = queue()
+# list_parameters = queue()
 
 def start_client(client, epoch, batchsize, net, opti, global_parameters):
     
@@ -83,29 +83,29 @@ def main(cfg: DictConfig):
 
         sum_parameters = None
         for client in tqdm(clients_in_comm):
-            # local_parameters = my_clients.clients_set[client].local_update(
-            #     local_epoch=epoch,
-            #     local_batch_size=batchsize,
-            #     net=net,
-            #     optimizer=opti,
-            #     global_parameters=global_parameters)
+            local_parameters = my_clients.clients_set[client].local_update(
+                local_epoch=epoch,
+                local_batch_size=batchsize,
+                net=net,
+                optimizer=opti,
+                global_parameters=global_parameters)
             
-            t = threading.Thread(target=start_client, args=(my_clients.clients_set[client], epoch, batchsize, net, opti, global_parameters))
-            t.start()
+            # t = threading.Thread(target=start_client, args=(my_clients.clients_set[client], epoch, batchsize, net, opti, global_parameters))
+            # t.start()
             # start_client()
 
-            if len(list_parameters) >= clients_in_comm: 
-                for element in list_parameters: 
-                    sum_parameters += element.get("params")               
+            # if len(list_parameters) >= clients_in_comm: 
+            #     for element in list_parameters: 
+            #         sum_parameters += element.get("params")               
 
-            # if sum_parameters is None:
-            #     sum_parameters = {}
-            #     for key, var in local_parameters.items():
-            #         sum_parameters[key] = var.clone()
-            # else:
-            #     for var in sum_parameters:
-            #         sum_parameters[var] = sum_parameters[var] + \
-            #             local_parameters[var]
+            if sum_parameters is None:
+                sum_parameters = {}
+                for key, var in local_parameters.items():
+                    sum_parameters[key] = var.clone()
+            else:
+                for var in sum_parameters:
+                    sum_parameters[var] = sum_parameters[var] + \
+                        local_parameters[var]
 
         for var in global_parameters:
             global_parameters[var] = (sum_parameters[var] / num_in_comm) # Modifier aussi ici puisque la structure a change

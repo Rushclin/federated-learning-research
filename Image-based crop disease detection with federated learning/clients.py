@@ -34,6 +34,9 @@ class Client:
 
                 pred = model(data)
 
+                print(pred)
+                print(label)
+
                 loss = loss_fn(pred, label)
                 loss.backward()
 
