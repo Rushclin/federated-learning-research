@@ -11,7 +11,7 @@ E: 1 # Nombre d'epoque local
 B: 10 # Taille des lots
 R: 10 # Nombre total de tour
 C: 0.1 # Fraction de client par tour
-lr: 0.1 # aux d'apprentissage
+lr: 0.1 # Taux d'apprentissage
 criterion: "CrossEntropyLoss" # Fonction objectif
 eval_every: 1 # On doit evaluer le modele apres 1 tour d'entrainement.
 
@@ -19,7 +19,7 @@ result_path: "resultats"
 exp_name: "FedAVG"
 log_path: "logs"
 
-# Specifique au modele
+# Spécifique au modèle
 dropout: 0.1
 hidden_size: 200
 num_classes: 10
