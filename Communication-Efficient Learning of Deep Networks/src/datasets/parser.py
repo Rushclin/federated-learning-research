@@ -54,7 +54,7 @@ def split_dataset(input_folder: str, output_folder: str, train_ratio=0.8) -> Non
 
 
 def fetch_dataset(args, transforms):
-    logger.info(f'[LOAD] chargement du dataset!')
+    logger.info(f'[LOAD] Chargement du dataset!')
 
     split_dataset(input_folder=args.input_folder,
                   output_folder=args.output_folder, train_ratio=args.train_ratio)
