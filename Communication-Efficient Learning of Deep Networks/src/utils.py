@@ -35,12 +35,15 @@ def set_seed(seed):
 # tqdm add-on #
 ###############
 class TqdmToLogger(tqdm):
-    def __init__(self, *args, logger=None, 
-    mininterval=0.1, 
-    bar_format='{desc:<}{percentage:3.0f}% |{bar:20}| [{n_fmt:6s}/{total_fmt}]', 
-    desc=None, 
-    **kwargs
-    ):
+    def __init__(
+            self, 
+            *args, 
+            logger=None, 
+            mininterval=0.1, 
+            bar_format='{desc:<}{percentage:3.0f}% |{bar:20}| [{n_fmt:6s}/{total_fmt}]', 
+            desc=None, 
+            **kwargs
+        ):
         self._logger = logger
         super().__init__(*args, mininterval=mininterval, bar_format=bar_format, desc=desc, **kwargs)
 
@@ -55,7 +58,7 @@ class TqdmToLogger(tqdm):
             return
         if not msg:
             msg = self.__str__()
-        self.logger.info('%s', msg.strip('\r\n\t '))
+        self.logger.info(msg)
 
 
 
