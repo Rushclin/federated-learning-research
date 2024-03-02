@@ -9,7 +9,8 @@ class FedavgOptimizer(BaseOptimizer, torch.optim.Optimizer):
         self.lr = kwargs.get('lr')
         self.momentum = kwargs.get('momentum', 0.)
         defaults = dict(lr=self.lr, momentum=self.momentum)
-        BaseOptimizer.__init__(self); torch.optim.Optimizer.__init__(self, params=params, defaults=defaults)
+        BaseOptimizer.__init__(self); 
+        torch.optim.Optimizer.__init__(self, params=params, defaults=defaults)
         
     def step(self, closure=None):
         loss = None

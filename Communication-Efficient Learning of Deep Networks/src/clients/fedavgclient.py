@@ -27,7 +27,7 @@ class FedavgClient(BaseClient):
         self.test_loader = self._create_dataloader(
             self.test_set, shuffle=False)
 
-    def _refine_optim_args(self, args):
+    def _collect_args(self, args):
         required_args = inspect.getfullargspec(self.optim)[0]
 
         # Collecte les arguments necessaires
@@ -44,11 +44,13 @@ class FedavgClient(BaseClient):
 
     def update(self):
         metrics = MetricManager(self.args.eval_metrics)
+       
         self.model.train()
         self.model.to(self.args.device)
 
         optimizer = self.optim(self.model.parameters(),
-                               **self._refine_optim_args(self.args))
+                               **self._collect_args(self.args))
+        
         for e in range(self.args.E):
             for inputs, targets in self.train_loader:
                 inputs, targets = inputs.to(
@@ -74,6 +76,7 @@ class FedavgClient(BaseClient):
     def evaluate(self):
 
         metrics = MetricManager(self.args.eval_metrics)
+
         self.model.eval()
         self.model.to(self.args.device)
 
@@ -99,5 +102,5 @@ class FedavgClient(BaseClient):
     def __len__(self):
         return len(self.training_set)
 
-    def __repr__(self):
+    def __repr__(self): # Pour formater lorsqu'on doit vouloir imprimer la classe FedavgClient
         return f'CLIENT < {self.id} >'
