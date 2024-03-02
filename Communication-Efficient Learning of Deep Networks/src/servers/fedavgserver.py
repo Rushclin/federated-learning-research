@@ -4,7 +4,7 @@ import torch
 import random
 import logging
 import numpy as np
-import concurrent.futures
+import concurrent.futures as threads
 
 from importlib import import_module
 from collections import ChainMap, defaultdict
@@ -31,9 +31,9 @@ class FedavgServer(BaseServer):
         self.results = defaultdict(dict) 
 
     def _init_model(self, model):
-        logger.info(f'[{self.args.algorithm.upper()}] [ {str(self.round).zfill(4)}] Initialisation du modele')
+        logger.info(f'[{self.args.algorithm.upper()}] [ {str(self.round).zfill(4)}] Initialisation du modèle')
         return model
-    
+
     def _get_algorithm(self, model, **kwargs):
         ALGORITHM_CLASS = import_module(f'..optimizer.{self.args.algorithm}', package=__package__).__dict__[f'{self.args.algorithm.title()}Optimizer']
         optimizer = ALGORITHM_CLASS(params=model.parameters(), **kwargs)
@@ -51,26 +51,27 @@ class FedavgServer(BaseServer):
 
         clients = []
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(int(self.args.K), os.cpu_count() - 1)) as workhorse:
+        with threads.ThreadPoolExecutor(max_workers=min(int(self.args.K), os.cpu_count() - 1)) as thread:
             for identifier, datasets in TqdmToLogger(
                 enumerate(client_datasets), 
                 logger=logger, 
-                desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [ {str(self.round).zfill(4)}] ...Creation du client... ',
+                desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [{str(self.round).zfill(4)}] ...Creation du client... ',
                 total=len(client_datasets)
             ):
-                clients.append(workhorse.submit(__create_client, identifier, datasets).result())            
+                clients.append(thread.submit(__create_client, identifier, datasets).result())            
         logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [{str(self.round).zfill(4)}] ...Creation de {self.args.K} clients reussit !')
         return clients
+    
 
-    def _sample_clients(self, exclude=[]):
-        """ Fonction qui doit selectionner de maniere aleatoire les clients"""
+    def _sample_clients(self, exclude=[]): # Exclude ici nous permet de ne pas considérer certains clients
+        """ Fonction qui doit selectionner de manière aléatoire les clients"""
 
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [ {str(self.round).zfill(4)}] Clients aleatoire ')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [{str(self.round).zfill(4)}] clients aléatoire ')
 
         if exclude == []: 
             num_sampled_clients = max(int(self.args.C * self.args.K), 1)
             sampled_client_ids = sorted(random.sample([i for i in range(self.args.K)], num_sampled_clients))
-        else: # Sélectionner aléatoirement des clients non participants en quantité égale à `eval_fraction` multipliée
+        else:   # Sélectionner aléatoirement des clients non participants en quantité égale à `eval_fraction` multipliée
             num_unparticipated_clients = self.args.K - len(exclude)
             if num_unparticipated_clients == 0: 
                 num_sampled_clients = self.args.K
@@ -78,14 +79,17 @@ class FedavgServer(BaseServer):
             else:
                 num_sampled_clients = max(int(self.args.eval_fraction * num_unparticipated_clients), 1)
                 sampled_client_ids = sorted(random.sample([identifier for identifier in [i for i in range(self.args.K)] if identifier not in exclude], num_sampled_clients))
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [ {str(self.round).zfill(4)}] ...{num_sampled_clients} clients on ete selectionne ')
+
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [{str(self.round).zfill(4)}] ...{num_sampled_clients} clients on été sélectionnés ')
         return sampled_client_ids
 
     def _log_results(self, resulting_sizes, results, eval, participated, save_raw):
         losses, metrics, num_samples = list(), defaultdict(list), list()
         
         for identifier, result in results.items():
+           
             client_log_string = f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] [{"EVALUATION" if eval else "MISE A JOUR"}] [CLIENT] < {str(identifier).zfill(6)} > '
+            
             if eval: 
                 loss = result['loss']
                 client_log_string += f'| loss: {loss:.4f} '
@@ -94,6 +98,7 @@ class FedavgServer(BaseServer):
                 for metric, value in result['metrics'].items():
                     client_log_string += f'| {metric}: {value:.4f} '
                     metrics[metric].append(value)
+
             else: 
                 loss = result[self.args.E]['loss']
                 client_log_string += f'| loss: {loss:.4f} '
@@ -101,7 +106,8 @@ class FedavgServer(BaseServer):
                 
                 for name, value in result[self.args.E]['metrics'].items():
                     client_log_string += f'| {name}: {value:.4f} '
-                    metrics[name].append(value)                
+                    metrics[name].append(value)  
+
             num_samples.append(resulting_sizes[identifier])
 
             logger.info(client_log_string)
@@ -109,24 +115,20 @@ class FedavgServer(BaseServer):
             num_samples = np.array(num_samples).astype(float)
 
         result_dict = defaultdict(dict)
+        
         total_log_string = f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] [{"EVALUATION" if eval else "MISE A JOUR "}] [SOMMAIRE] ({len(resulting_sizes)} clients):'
 
         losses_array = np.array(losses).astype(float)
-        weighted = losses_array.dot(num_samples) / sum(num_samples); std = losses_array.std()
+        weighted = losses_array.dot(num_samples) / sum(num_samples)
+        std = losses_array.std()
+
+        total_log_string += f'\n    - Loss: Avg. ({weighted:.4f}) Std. ({std:.4f})'
+        # total_log_string += f'\n    - Loss: Avg. ({weighted:.4f}) Std. ({std:.4f}) | Top 10% ({top10_mean:.4f}) Std. ({top10_std:.4f}) | Bottom 10% ({bot10_mean:.4f}) Std. ({bot10_std:.4f})'
         
-        top10_indices = np.argpartition(losses_array, -int(0.1 * len(losses_array)))[-int(0.1 * len(losses_array)):] if len(losses_array) > 1 else 0
-        top10 = np.atleast_1d(losses_array[top10_indices])
-        top10_mean, top10_std = top10.dot(np.atleast_1d(num_samples[top10_indices])) / num_samples[top10_indices].sum(), top10.std()
-
-        bot10_indices = np.argpartition(losses_array, max(1, int(0.1 * len(losses_array)) - 1))[:max(1, int(0.1 * len(losses_array)))] if len(losses_array) > 1 else 0
-        bot10 = np.atleast_1d(losses_array[bot10_indices])
-        bot10_mean, bot10_std = bot10.dot(np.atleast_1d(num_samples[bot10_indices])) / num_samples[bot10_indices].sum(), bot10.std()
-
-        total_log_string += f'\n    - Loss: Avg. ({weighted:.4f}) Std. ({std:.4f}) | Top 10% ({top10_mean:.4f}) Std. ({top10_std:.4f}) | Bottom 10% ({bot10_mean:.4f}) Std. ({bot10_std:.4f})'
         result_dict['loss'] = {
             'avg': weighted.astype(float), 'std': std.astype(float), 
-            'top10p_avg': top10_mean.astype(float), 'top10p_std': top10_std.astype(float), 
-            'bottom10p_avg': bot10_mean.astype(float), 'bottom10p_std': bot10_std.astype(float)
+            # 'top10p_avg': top10_mean.astype(float), 'top10p_std': top10_std.astype(float), 
+            # 'bottom10p_avg': bot10_mean.astype(float), 'bottom10p_std': bot10_std.astype(float)
         }
 
         if save_raw:
@@ -150,11 +152,12 @@ class FedavgServer(BaseServer):
             bot10 = np.atleast_1d(val_array[bot10_indices])
             bot10_mean, bot10_std = bot10.dot(np.atleast_1d(num_samples[bot10_indices])) / num_samples[bot10_indices].sum(), bot10.std()
 
-            total_log_string += f'\n    - {name.title()}: Avg. ({weighted:.4f}) Std. ({std:.4f}) | Top 10% ({top10_mean:.4f}) Std. ({top10_std:.4f}) | Bottom 10% ({bot10_mean:.4f}) Std. ({bot10_std:.4f})'
+            total_log_string += f'\n    - {name.title()}: Avg. ({weighted:.4f}) Std. ({std:.4f})'
+            # total_log_string += f'\n    - {name.title()}: Avg. ({weighted:.4f}) Std. ({std:.4f}) | Top 10% ({top10_mean:.4f}) Std. ({top10_std:.4f}) | Bottom 10% ({bot10_mean:.4f}) Std. ({bot10_std:.4f})'
             result_dict[name] = {
                 'avg': weighted.astype(float), 'std': std.astype(float), 
-                'top10p_avg': top10_mean.astype(float), 'top10p_std': top10_std.astype(float), 
-                'bottom10p_avg': bot10_mean.astype(float), 'bottom10p_std': bot10_std.astype(float)
+                # 'top10p_avg': top10_mean.astype(float), 'top10p_std': top10_std.astype(float), 
+                # 'bottom10p_avg': bot10_mean.astype(float), 'bottom10p_std': bot10_std.astype(float)
             }
                 
             if save_raw:
@@ -171,9 +174,11 @@ class FedavgServer(BaseServer):
         return result_dict
 
     def _request(self, ids, eval, participated, retain_model, save_raw):
+        
         def __update_clients(client):
             if client.model is None:
                 client.download(self.global_model)
+            
             client.args.lr = self.curr_lr
             update_result = client.update()
             return {client.id: len(client.training_set)}, {client.id: update_result}
@@ -181,27 +186,32 @@ class FedavgServer(BaseServer):
         def __evaluate_clients(client):
             if client.model is None:
                 client.download(self.global_model)
+
             eval_result = client.evaluate() 
-            if not retain_model:
-                client.model = None
+ 
+            # if not retain_model:
+            #     client.model = None
             return {client.id: len(client.test_set)}, {client.id: eval_result}
 
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [ {str(self.round).zfill(4)}] Requete {"Mise a jour " if not eval else "evaluer"} pour  {"tous les" if ids is None else len(ids)} clients !')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [ {str(self.round).zfill(4)}] Requête {"mise à jour " if not eval else "évaluer"} pour {"tous les" if ids is None else len(ids)} clients !')
         
         if eval:
             jobs, results = [], []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(ids), os.cpu_count() - 1)) as workhorse:
+            with threads.ThreadPoolExecutor(max_workers=min(len(ids), os.cpu_count() - 1)) as thread:
                 for idx in TqdmToLogger(
                     ids, 
                     logger=logger, 
-                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...evaluation des clients... ',
+                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...évaluation des clients... ',
                     total=len(ids)
                 ):
-                    jobs.append(workhorse.submit(__evaluate_clients, self.clients[idx])) 
-                for job in concurrent.futures.as_completed(jobs):
+                    jobs.append(thread.submit(__evaluate_clients, self.clients[idx])) 
+
+                for job in threads.as_completed(jobs):
                     results.append(job.result())
+
             _eval_sizes, _eval_results = list(map(list, zip(*results)))
             _eval_sizes, _eval_results = dict(ChainMap(*_eval_sizes)), dict(ChainMap(*_eval_results))
+            
             self.results[self.round][f'clients_evaluated_{"in" if participated else "out"}'] = self._log_results(
                 _eval_sizes, 
                 _eval_results, 
@@ -209,22 +219,24 @@ class FedavgServer(BaseServer):
                 participated=participated,
                 save_raw=save_raw
             )
-            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...evaluation complete de {"tous les " if ids is None else len(ids)} clients!')
+            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...évaluation complete de {"tous les " if ids is None else len(ids)} clients!')
             return None
         else:
             jobs, results = [], []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(ids), os.cpu_count() - 1)) as workhorse:
+            with threads.ThreadPoolExecutor(max_workers=min(len(ids), os.cpu_count() - 1)) as workhorse:
                 for idx in TqdmToLogger(
                     ids, 
                     logger=logger, 
-                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...mises a jour des clients... ',
+                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...mises à jour des clients... ',
                     total=len(ids)
                 ):
                     jobs.append(workhorse.submit(__update_clients, self.clients[idx])) 
-                for job in concurrent.futures.as_completed(jobs):
+                for job in threads.as_completed(jobs):
                     results.append(job.result())
+
             update_sizes, _update_results = list(map(list, zip(*results)))
             update_sizes, _update_results = dict(ChainMap(*update_sizes)), dict(ChainMap(*_update_results))
+           
             self.results[self.round]['clients_updated'] = self._log_results(
                 update_sizes, 
                 _update_results, 
@@ -232,13 +244,13 @@ class FedavgServer(BaseServer):
                 participated=True,
                 save_raw=False
             )
-            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...mises a jour complete de  {"tous les" if ids is None else len(ids)} clients!')
+            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...mises à jour complète de  {"tous les" if ids is None else len(ids)} clients!')
             return update_sizes
     
     def _aggregate(self, server_optimizer, ids, updated_sizes):
         assert set(updated_sizes.keys()) == set(ids)
 
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] Agregation ')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] Agrégation ')
         
         coefficients = {identifier: float(nuemrator / sum(updated_sizes.values())) for identifier, nuemrator in updated_sizes.items()}
         
@@ -246,7 +258,7 @@ class FedavgServer(BaseServer):
             local_layers_iterator = self.clients[identifier].upload()
             server_optimizer.accumulate(coefficients[identifier], local_layers_iterator)
             self.clients[identifier].model = None
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...agregation complete du modele!')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...agrégation complète du modèle!')
         return server_optimizer
 
     @torch.no_grad()
@@ -276,13 +288,6 @@ class FedavgServer(BaseServer):
             server_log_string += f'| {metric}: {value:.4f} '
         logger.info(server_log_string)
 
-        # log TensorBoard
-        # self.writer.add_scalar('Server Loss', loss, self.round)
-        # for name, value in result['metrics'].items():
-        #     self.writer.add_scalar(f'Server {name.title()}', value, self.round)
-        # else:
-        #     self.writer.flush()
-        # self.results[self.round]['server_evaluated'] = result
 
     def update(self):
         """Mise a jour du modèle globale.
@@ -295,17 +300,17 @@ class FedavgServer(BaseServer):
         server_optimizer = self._get_algorithm(self.global_model, **self.opt_kwargs)
         server_optimizer.zero_grad(set_to_none=True)
         server_optimizer = self._aggregate(server_optimizer, selected_ids, updated_sizes) # Agregation des mises a jours locales
-        server_optimizer.step() # Mises a jour du modele avec les nouvelles valeurs de l'optimisateur
+        server_optimizer.step() # Mises à jour du modèle avec les nouvelles valeurs de l'optimisateur
         return selected_ids
 
     def evaluate(self, excluded_ids):
-        """Evaluation du modele global.
+        """Evaluation du modèle.
         """
        
-        if self.args.eval_type != 'global': 
+        if self.args.eval_type == 'local': 
             selected_ids = self._sample_clients(exclude=excluded_ids)
             _ = self._request(selected_ids, eval=True, participated=False, retain_model=False, save_raw=self.round == self.args.R)
-        if self.args.eval_type != 'local':
+        if self.args.eval_type == 'global':
             self._central_evaluate()
 
         if (not self.args.train_only) and (not self.args.eval_type == 'global'):
@@ -316,15 +321,13 @@ class FedavgServer(BaseServer):
                     if 'avg' in name:
                         gap = curr_res['clients_evaluated_out'][key][name] - curr_res['clients_evaluated_in'][key][name]
                         gen_gap[f'gen_gap_{key}'] = {name: gap}
-                        # self.writer.add_scalars(f'Generalization Gap ({key.title()})', gen_gap[f'gen_gap_{key}'], self.round)
-                        # self.writer.flush()
             else:
                 self.results[self.round]['generalization_gap'] = dict(gen_gap)
 
     def finalize(self):
         """Sauvegarde du resultat.
         """
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] Sauvegarde du modele dans le checkpoints !')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] Sauvegarde du modèle dans le checkpoints !')
         
         with open(os.path.join(self.args.result_path, f'{self.args.exp_name}.json'), 'w', encoding='utf8') as result_file: 
             results = {key: value for key, value in self.results.items()}
