@@ -19,7 +19,7 @@ def load_model(args):
             continue
         model_args[argument] = getattr(args, argument)
 
-    logger.info(f"[MODELE] Le modele charge est ... {model_class}")
+    logger.info(f"[MODELE] Le modèle chargé est ... {model_class}")
 
     model = model_class(**model_args)
 
