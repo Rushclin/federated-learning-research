@@ -194,7 +194,7 @@ class FedavgServer(BaseServer):
                 for idx in TqdmToLogger(
                     ids, 
                     logger=logger, 
-                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...evaluation des clients... ',
+                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...évaluation des clients... ',
                     total=len(ids)
                 ):
                     jobs.append(workhorse.submit(__evaluate_clients, self.clients[idx])) 
@@ -209,7 +209,7 @@ class FedavgServer(BaseServer):
                 participated=participated,
                 save_raw=save_raw
             )
-            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...evaluation complete de {"tous les " if ids is None else len(ids)} clients!')
+            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...évaluation complète de {"tous les " if ids is None else len(ids)} clients!')
             return None
         else:
             jobs, results = [], []
@@ -217,7 +217,7 @@ class FedavgServer(BaseServer):
                 for idx in TqdmToLogger(
                     ids, 
                     logger=logger, 
-                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...mises a jour des clients... ',
+                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...mises à jour des clients... ',
                     total=len(ids)
                 ):
                     jobs.append(workhorse.submit(__update_clients, self.clients[idx])) 
@@ -232,13 +232,13 @@ class FedavgServer(BaseServer):
                 participated=True,
                 save_raw=False
             )
-            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...mises a jour complete de  {"tous les" if ids is None else len(ids)} clients!')
+            logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...mises à jour complète de  {"tous les" if ids is None else len(ids)} clients!')
             return update_sizes
     
     def _aggregate(self, server_optimizer, ids, updated_sizes):
         assert set(updated_sizes.keys()) == set(ids)
 
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] Agregation ')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] Agrégation ')
         
         coefficients = {identifier: float(nuemrator / sum(updated_sizes.values())) for identifier, nuemrator in updated_sizes.items()}
         
@@ -246,7 +246,7 @@ class FedavgServer(BaseServer):
             local_layers_iterator = self.clients[identifier].upload()
             server_optimizer.accumulate(coefficients[identifier], local_layers_iterator)
             self.clients[identifier].model = None
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...agregation complete du modele!')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...agrégation complète du modèle!')
         return server_optimizer
 
     @torch.no_grad()
@@ -299,7 +299,7 @@ class FedavgServer(BaseServer):
         return selected_ids
 
     def evaluate(self, excluded_ids):
-        """Evaluation du modele global.
+        """Evaluation du modèle global.
         """
        
         if self.args.eval_type != 'global': 
