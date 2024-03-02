@@ -2,7 +2,7 @@ from abc import *
 
 
 class BaseServer(metaclass=ABCMeta):
-    """Centeral server orchestrating the whole process of federated learning.
+    """
     """
     def __init__(self, **kwargs):
         self._round = 0
