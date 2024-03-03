@@ -2,9 +2,9 @@ seed: 42
 device: "cpu" # Ou cuda si nous avons un GPU Nvidia
 algorithm: "fedavg" # Ou fedprox
 model_name: "TwoCNN" # Ou TwoNN
-split_type: "iid" # Ou patho, diri,
+split_type: "iid" # Ou non-iid,
 eval_fraction: 1 # La fraction avec laquelle on doit evaluer notre modele.
-eval_metrics: ["precision"] # acc1
+eval_metrics: ["precision", "accuracy"] # f1, Recall
 optimizer: "SGD" # Ou Adam
 K: 10 # Nombre total de client qui doivent participer au FL
 E: 1 # Nombre d'epoque local
