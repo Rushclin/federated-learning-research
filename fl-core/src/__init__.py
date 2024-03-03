@@ -1,7 +1,7 @@
 import logging
 
 
-from .utils import MetricManager, set_seed, check_args, TqdmToLogger, stratified_split
+from .utils import MetricManager, set_seed, check_args, TqdmToLogger, stratified_split, tensorboard_runner
 from .loaders import load_model, load_dataset, split
 
 

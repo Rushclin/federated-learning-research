@@ -9,12 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from importlib import import_module
 
-from src import set_seed, set_logger, check_args, load_model, load_dataset, tensorboard_runner
-
-
-# Pour le lancement de tensorboard
-def board(args: DictConfig):
-    tensorboard_runner(args)
+from src import set_seed, set_logger, check_args, load_model, load_dataset
 
 
 @hydra.main(config_name="base", config_path="./src/config", version_base=None)
@@ -42,9 +37,6 @@ def main(args: DictConfig):
         args.log_path, f'{args.exp_name}_{curr_time}'), filename_suffix=f'_{curr_time}')
 
     # ------------ Fin ------------
-
-    # ------ Board ----------
-    board(args)
 
     # Modification du seed global de l'algorithme
     set_seed(args.seed)
@@ -83,7 +75,6 @@ if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)
     try:
         main()
-        board()
         sys.exit(0)
     except Exception:
         traceback.print_exc()

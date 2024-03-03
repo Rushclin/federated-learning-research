@@ -2,6 +2,7 @@ import os
 import torch
 import random
 import logging
+import subprocess
 import numpy as np
 
 from tqdm import tqdm
@@ -153,3 +154,8 @@ def stratified_split(raw_dataset, test_size):
         train_indices.extend(set(indices) - set(random_indices_sample))
 
     return Subset(raw_dataset, train_indices), Subset(raw_dataset, test_indices)
+
+
+def tensorboard_runner(args):
+    subprocess.Popen(f"tensorboard --logdir {args.log_path} --port {args.tb_port}", shell=True)
+   

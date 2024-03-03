@@ -40,3 +40,5 @@ train_only: True
 beta1: 0.
 
 use_tb: True
+tb_host: 127.0.0.1
+tb_port: 6006
