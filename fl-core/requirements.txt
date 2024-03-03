@@ -1,0 +1,9 @@
+tqdm
+torch
+numpy
+pandas
+matplotlib
+hydra-core
+torchvision
+tensorboard 
+scikit-learn

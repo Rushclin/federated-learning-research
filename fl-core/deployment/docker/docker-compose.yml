@@ -1,0 +1,9 @@
+version: '0.0.1'
+
+services:
+  federated_learning:
+    restart: always
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile
+    container_name: federated_learning
