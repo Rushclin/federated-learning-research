@@ -1,0 +1,42 @@
+seed: 42
+device: "cpu" # Ou cuda si nous avons un GPU Nvidia
+algorithm: "fedavg" # Ou fedprox
+model_name: "TwoCNN" # Ou TwoNN
+split_type: "iid" # Ou patho, diri,
+eval_fraction: 1 # La fraction avec laquelle on doit evaluer notre modele.
+eval_metrics: ["precision"] # acc1
+optimizer: "SGD" # Ou Adam
+K: 10 # Nombre total de client qui doivent participer au FL
+E: 1 # Nombre d'epoque local
+B: 10 # Taille des lots
+R: 10 # Nombre total de tour
+C: 0.1 # Fraction de client par tour
+lr: 0.1 # Taux d'apprentissage
+criterion: "CrossEntropyLoss" # Fonction objectif
+eval_every: 1 # On doit evaluer le modele apres 1 tour d'entrainement.
+
+result_path: "resultats"
+exp_name: "FedAVG"
+log_path: "logs"
+
+# Spécifique au modèle
+dropout: 0.1
+hidden_size: 200
+num_classes: 10
+resize: 28
+in_channels: 3 # La taille des entrées, sur 3 couleurs
+
+# Specifique au dataset
+input_folder: "data"
+output_folder: "dataset"
+train_ratio: 0.8
+dataset: "mnist"
+no_shuffle: False
+
+# Evaluation du modele
+eval_type: "local" # Ou global
+test_size: 0.2
+train_only: True
+beta1: 0.
+
+use_tb: True
