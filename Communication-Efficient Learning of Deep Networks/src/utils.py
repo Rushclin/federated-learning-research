@@ -1,6 +1,4 @@
 import os
-import sys
-import json
 import torch
 import random
 import logging
@@ -9,7 +7,6 @@ import numpy as np
 from tqdm import tqdm
 from importlib import import_module
 from collections import defaultdict
-from multiprocessing import Process
 from torch.utils.data import Subset
 
 logger = logging.getLogger(__name__)
@@ -32,7 +29,7 @@ def set_seed(seed):
 
     
 ###############
-# tqdm add-on #
+#     TQDM    #
 ###############
 class TqdmToLogger(tqdm):
     def __init__(
@@ -45,7 +42,7 @@ class TqdmToLogger(tqdm):
             **kwargs
         ):
         self._logger = logger
-        super().__init__(*args, mininterval=mininterval, bar_format=bar_format, desc=desc, **kwargs)
+        super().__init__(*args, mininterval=mininterval, bar_format=bar_format, ascii=True, desc=desc, **kwargs)
 
     @property
     def logger(self):
@@ -61,28 +58,11 @@ class TqdmToLogger(tqdm):
         self.logger.info(msg)
 
 
-
-####################
-# Stratified Split #
-####################
-def stratified_split(raw_dataset, test_size):
-    indices_per_label = defaultdict(list)
-    for index, label in enumerate(np.array(raw_dataset.dataset.targets)[raw_dataset.indices]):
-        indices_per_label[label.item()].append(index)
-    
-    train_indices, test_indices = [], []
-    for label, indices in indices_per_label.items():
-        n_samples_for_label = round(len(indices) * test_size)
-        random_indices_sample = random.sample(indices, n_samples_for_label)
-        test_indices.extend(random_indices_sample)
-        train_indices.extend(set(indices) - set(random_indices_sample))
-
-
 ##################
 # Metric manager #
 ##################
 class MetricManager:
-    """Managing metrics to be used.
+    """
     """
     def __init__(self, eval_metrics):
 
@@ -93,17 +73,11 @@ class MetricManager:
         self.figures = defaultdict(int) 
         self._results = dict()
 
-        # use optimal threshold (i.e., Youden's J or not)
-        if 'youdenj' in self.metric_funcs:
-            for func in self.metric_funcs.values():
-                if hasattr(func, '_use_youdenj'):
-                    setattr(func, '_use_youdenj', True)
-
     def track(self, loss, pred, true):
-        # update running loss
+        
+        # Mise à jour 
         self.figures['loss'] += loss * len(pred)
 
-        # update running metrics
         for module in self.metric_funcs.values():
             module.collect(pred, true)
 
