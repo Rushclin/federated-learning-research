@@ -97,6 +97,8 @@ class FedavgClient(BaseClient):
         self.model = copy.deepcopy(model)
 
     def upload(self):
+        total_params = sum(p.numel() for p in self.model.parameters())
+        print("Taille des poids du modèle : {:.2f} Mo".format(total_params * 4 / (1024 ** 2)))  # Conversion des octets en Mo
         return itertools.chain.from_iterable([self.model.named_parameters(), self.model.named_buffers()])
 
     def __len__(self):
