@@ -128,7 +128,7 @@ def check_args(args):
         raise AssertionError(err)
 
     # Vérification de l'algorithme à exécuter
-    if args.algorithm != ('fedavg' or 'fedprox'):
+    if args.algorithm not in ['fedavg', 'fedprox'] :
         err = "Le type d'agrégation passé n'est pas pris en charge !"
         logger.exception(err)
         raise AssertionError(err)

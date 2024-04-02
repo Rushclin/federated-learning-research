@@ -1,6 +1,6 @@
 seed: 42
 device: "cpu" # Ou cuda si nous avons un GPU Nvidia
-algorithm: "fedavg" # Ou fedprox
+algorithm: "fedavg" # Ou fedprox ou fedavg
 model_name: "TwoCNN" # Ou TwoNN
 split_type: "iid" # Ou non-iid,
 eval_fraction: 1 # La fraction avec laquelle on doit evaluer notre modele.
@@ -14,6 +14,7 @@ C: 0.1 # Fraction de client par tour
 lr: 0.1 # Taux d'apprentissage
 criterion: "CrossEntropyLoss" # Fonction objectif
 eval_every: 1 # On doit evaluer le modele apres 1 tour d'entrainement.
+mu: 0.1 # Constante pour le terme de regularisation proximale
 
 result_path: "resultats"
 exp_name: "FedAVG"

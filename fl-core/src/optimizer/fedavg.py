@@ -3,15 +3,14 @@ import torch
 from .baseoptimizer import BaseOptimizer
 
 
-
 class FedavgOptimizer(BaseOptimizer, torch.optim.Optimizer):
     def __init__(self, params, **kwargs):
         self.lr = kwargs.get('lr')
         self.momentum = kwargs.get('momentum', 0.)
         defaults = dict(lr=self.lr, momentum=self.momentum)
-        BaseOptimizer.__init__(self); 
+        BaseOptimizer.__init__(self)
         torch.optim.Optimizer.__init__(self, params=params, defaults=defaults)
-        
+
     def step(self, closure=None):
         loss = None
         if closure is not None:
@@ -24,11 +23,13 @@ class FedavgOptimizer(BaseOptimizer, torch.optim.Optimizer):
                     continue
                 delta = param.grad.data
 
-                if idx == 0: 
+                if idx == 0:
                     if beta > 0.:
                         if 'momentum_buffer' not in self.state[param]:
-                            self.state[param]['momentum_buffer'] = torch.zeros_like(param).detach()
-                        self.state[param]['momentum_buffer'].mul_(beta).add_(delta.mul(1. - beta)) 
+                            self.state[param]['momentum_buffer'] = torch.zeros_like(
+                                param).detach()
+                        self.state[param]['momentum_buffer'].mul_(
+                            beta).add_(delta.mul(1. - beta))
                         delta = self.state[param]['momentum_buffer']
                 param.data.sub_(delta)
         return loss
@@ -40,8 +41,9 @@ class FedavgOptimizer(BaseOptimizer, torch.optim.Optimizer):
                     server_param.data.zero_()
                     server_param.data.grad = torch.zeros_like(server_param)
                     continue
-                local_delta = (server_param - local_signals).mul(mixing_coefficient).data.type(server_param.dtype)
-                if server_param.grad is None: 
+                local_delta = (
+                    server_param - local_signals).mul(mixing_coefficient).data.type(server_param.dtype)
+                if server_param.grad is None:
                     server_param.grad = local_delta
                 else:
                     server_param.grad.data.add_(local_delta)
