@@ -1,23 +1,24 @@
 import copy
 import torch
+
 from .fedavgclient import FedavgClient
 from src import MetricManager
 
-class FedproxClient(FedavgClient): # On éffectue juste l'héritage et on modifie la fonction de mise à jour
+
+class FedproxClient(FedavgClient):
     def __init__(self, **kwargs):
         super(FedproxClient, self).__init__(**kwargs)
 
-    
     def update(self):
         mm = MetricManager(self.args.eval_metrics)
         self.model.train()
         self.model.to(self.args.device)
-
+        
         global_model = copy.deepcopy(self.model)
         for param in global_model.parameters(): 
             param.requires_grad = False
-
-        optimizer = self.optim(self.model.parameters(), **self._collect_args(self.args))
+        
+        optimizer = self.optim(self.model.parameters(), **self._refine_optim_args(self.args))
         for e in range(self.args.E):
             for inputs, targets in self.train_loader:
                 inputs, targets = inputs.to(self.args.device), targets.to(self.args.device)
@@ -43,3 +44,4 @@ class FedproxClient(FedavgClient): # On éffectue juste l'héritage et on modifi
         else:
             self.model.to('cpu')
         return mm.results
+    

@@ -37,6 +37,8 @@ class FedavgServer(BaseServer):
     def _get_algorithm(self, model, **kwargs):
         ALGORITHM_CLASS = import_module(f'..optimizer.{self.args.algorithm}', package=__package__).__dict__[f'{self.args.algorithm.title()}Optimizer']
         optimizer = ALGORITHM_CLASS(params=model.parameters(), **kwargs)
+        if self.args.algorithm != 'fedsgd': 
+            optimizer.add_param_group(dict(params=list(self.global_model.buffers())))
         return optimizer
 
     def _create_clients(self, client_datasets):
@@ -173,7 +175,9 @@ class FedavgServer(BaseServer):
             if client.model is None:
                 client.download(self.global_model)
 
-            eval_result = client.evaluate() 
+            eval_result = client.evaluate()
+            if not retain_model:
+                client.model = None 
  
             return {client.id: len(client.test_set)}, {client.id: eval_result}
 
@@ -242,7 +246,7 @@ class FedavgServer(BaseServer):
             local_layers_iterator = self.clients[identifier].upload()
             server_optimizer.accumulate(coefficients[identifier], local_layers_iterator)
             self.clients[identifier].model = None
-        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour : {str(self.round).zfill(4)}] ...agrégation complète du modèle!')
+        logger.info(f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...agrégation complète du modèle!')
         return server_optimizer
 
     @torch.no_grad()
@@ -271,6 +275,13 @@ class FedavgServer(BaseServer):
         for metric, value in result['metrics'].items():
             server_log_string += f'| {metric}: {value:.4f} '
         logger.info(server_log_string)
+
+        self.writer.add_scalar('Server Loss', loss, self.round)
+        for name, value in result['metrics'].items():
+            self.writer.add_scalar(f'Server {name.title()}', value, self.round)
+        else:
+            self.writer.flush()
+        self.results[self.round]['server_evaluated'] = result
 
 
     def update(self):

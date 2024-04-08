@@ -1,10 +1,10 @@
 seed: 42
 device: "cpu" # Ou cuda si nous avons un GPU Nvidia
 algorithm: "fedprox" # Ou fedprox ou fedavg
-model_name: "TwoCNN" # Ou TwoNN
+model_name: "TwoCNN" # Ou TwoNN, ResNet10, ResNet18, ResNet34, VGG13BN
 split_type: "iid" # Ou non-iid,
 eval_fraction: 1 # La fraction avec laquelle on doit evaluer notre modele.
-eval_metrics: ["precision", "accuracy"] # f1, Recall
+eval_metrics: ["precision", "acc1", "recall", "f1"] # f1, Recall
 optimizer: "SGD" # Ou Adam
 K: 10 # Nombre total de client qui doivent participer au FL
 E: 1 # Nombre d'epoque local
@@ -12,6 +12,7 @@ B: 10 # Taille des lots
 R: 10 # Nombre total de tour
 C: 0.1 # Fraction de client par tour
 lr: 0.1 # Taux d'apprentissage
+lr_decay_step: 0.999
 criterion: "CrossEntropyLoss" # Fonction objectif
 eval_every: 1 # On doit evaluer le modele apres 1 tour d'entrainement.
 mu: 0.1 # Constante pour le terme de regularisation proximale
@@ -40,6 +41,8 @@ eval_type: "local" # Ou global
 test_size: 0.2
 train_only: True
 beta1: 0.
+init_type: 'xavier'
+init_gain: 1.0
 
 use_tb: True
 tb_host: 127.0.0.1
