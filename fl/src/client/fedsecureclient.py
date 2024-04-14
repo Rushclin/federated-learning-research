@@ -28,7 +28,6 @@ class FedsecureClient(FedavgClient):
                 self._model.parameters(), **self._refine_optim_args(self.args))
 
             self.delta = 1 / (1.1*len(self.training_set))
-            print("Delta ==> ", self.delta)
 
             self.client_model, self.client_optimizer, self.client_train_loader = self.privacy_engine.make_private(
                 module=self._model,
