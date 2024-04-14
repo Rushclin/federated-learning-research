@@ -202,7 +202,10 @@ class FedavgServer(BaseServer):
             if client.model is None:
                 client.download(self.global_model)
             client.args.lr = self.curr_lr
-            update_result = client.update()
+            if self.args.algorithm == 'fedsecure' and not eval:
+                update_result = client.update(self.round)
+            else:
+                update_result = client.update()
             return {client.id: len(client.training_set)}, {client.id: update_result}
 
         def __evaluate_clients(client):
@@ -247,7 +250,7 @@ class FedavgServer(BaseServer):
                 for idx in TqdmToLogger(
                     ids,
                     logger=logger,
-                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...mise a jour du client... ',
+                    desc=f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] ...mise à jour du client... ',
                     total=len(ids)
                 ):
                     jobs.append(workhorse.submit(
@@ -360,8 +363,6 @@ class FedavgServer(BaseServer):
                 self.results[self.round]['generalization_gap'] = dict(gen_gap)
 
     def finalize(self):
-        """Save results.
-        """
         logger.info(
             f'[{self.args.algorithm.upper()}] [{self.args.dataset.upper()}] [Tour: {str(self.round).zfill(4)}] modele sauvegardé!')
         with open(os.path.join(self.args.result_path, f'{self.args.exp_name}.json'), 'w', encoding='utf8') as result_file:

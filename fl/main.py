@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument('--init_gain', type=float, default=1.0, help='')
 
     parser.add_argument('--algorithm', help='Algorithme à utiliser', type=str,
-                        choices=['fedavg', 'fedsgd', 'fedprox', 'fedavgm'],
+                        choices=['fedavg', 'fedsecure', 'fedprox',],
                         required=True
                         )
     parser.add_argument('--eval_type', help='''- `local` - `global` - 'both' ''', type=str,
@@ -159,6 +159,13 @@ if __name__ == "__main__":
     parser.add_argument('--num_classes', help='', type=int, default=4)
     parser.add_argument('--in_channels', help='', type=int, default=3)
     parser.add_argument('--train', type=bool, default=True)
+
+    # Methode de securisation secure_mechanism  
+    parser.add_argument('--dp_mechanism', type=str, default="Laplace") # Ou Gaussian
+    parser.add_argument('--dp_epsilon', type=float, default=10) 
+    parser.add_argument('--dp_clip', type=float, default=10)
+    parser.add_argument('--dp_sample', type=float, default=0.01) 
+    parser.add_argument('--max_physical_batch_size', type=float, default=11) 
 
     args = parser.parse_args()
 

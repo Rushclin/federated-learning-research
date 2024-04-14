@@ -1,3 +1,4 @@
+import sys
 import copy
 import torch
 import inspect
@@ -87,6 +88,12 @@ class FedavgClient(BaseClient):
 
     def upload(self):
         return itertools.chain.from_iterable([self.model.named_parameters(), self.model.named_buffers()])
+    
+    def get_model_size(model):
+        model_size_bytes = sys.getsizeof(model)
+
+        model_size_mb = model_size_bytes / (1024 * 1024)  # 1 Mo = 1024 * 1024 octets
+        return model_size_mb
     
     def __len__(self):
         return len(self.training_set)
