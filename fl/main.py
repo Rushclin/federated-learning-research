@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     writer = SummaryWriter(log_dir=os.path.join(
         args.log_path, f'{args.exp_name}_{curr_time}'), filename_suffix=f'_{curr_time}')
-    tensorboard_runner(args)
+    # tensorboard_runner(args)
 
     try:
         main(args, writer)
