@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ## IID 
-python3 main.py \
+py main.py \
     --exp_name "FedAvg_PLANT_VILLAGE_TwoNN_IID" --seed 42 --device cpu \
     --dataset PLANT_VILLAGE \
     --split_type iid --test_size 0 \
