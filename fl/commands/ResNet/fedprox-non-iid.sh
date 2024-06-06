@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ## NON-IID
-py main.py \
+python3 main.py \
     --exp_name "FedProx_PLANT_VILLAGE_ResNet34_NON_IID" --seed 42 --device cpu \
     --dataset PLANT_VILLAGE \
     --split_type non-iid --test_size 0 \
